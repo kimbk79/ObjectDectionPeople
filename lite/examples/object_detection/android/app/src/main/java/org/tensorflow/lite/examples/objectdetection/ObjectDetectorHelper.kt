@@ -23,6 +23,7 @@ import org.tensorflow.lite.gpu.CompatibilityList
 import org.tensorflow.lite.support.image.ImageProcessor
 import org.tensorflow.lite.support.image.TensorImage
 import org.tensorflow.lite.support.image.ops.Rot90Op
+import org.tensorflow.lite.support.label.Category
 import org.tensorflow.lite.task.core.BaseOptions
 import org.tensorflow.lite.task.vision.detector.Detection
 import org.tensorflow.lite.task.vision.detector.ObjectDetector
@@ -124,8 +125,18 @@ class ObjectDetectorHelper(
 
         val results = objectDetector?.detect(tensorImage)
         inferenceTime = SystemClock.uptimeMillis() - inferenceTime
+
+        val people = results?.filter {
+            it.categories.any { category ->
+                category.label == "person" && category.score >= 0.5f
+            }
+        } ?: emptyList()
+
+
+        val peopleMutable = people.toMutableList()
+
         objectDetectorListener?.onResults(
-            results,
+            peopleMutable,
             inferenceTime,
             tensorImage.height,
             tensorImage.width)
